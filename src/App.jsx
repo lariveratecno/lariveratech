@@ -589,7 +589,7 @@ function MainApp() {
               )}
             </div>
 
-            <<div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-2">
               <label className="text-xs font-bold text-indigo-400 uppercase">2. Detalles del Equipo</label>
               <select className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white" value={formOrden.tipo_equipo} onChange={e => setFormOrden({ ...formOrden, tipo_equipo: e.target.value })}>
                 <option value="PORTATIL">Portátil / Laptop</option>
