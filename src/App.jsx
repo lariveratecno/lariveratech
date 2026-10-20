@@ -602,7 +602,7 @@ function MainApp() {
                 <input placeholder="Marca y Modelo *" className="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white" value={formOrden.marca_modelo} onChange={e => setFormOrden({ ...formOrden, marca_modelo: e.target.value })} />
                 <input placeholder="N° de Serie (S/N Equipo)" className="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white" value={formOrden.serie} onChange={e => setFormOrden({ ...formOrden, serie: e.target.value })} />
               </div>
-</div>
+            </div>
 
               <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/80 space-y-3">
                 <div className="flex gap-6 text-xs text-slate-200">
@@ -653,7 +653,6 @@ function MainApp() {
 
               <textarea placeholder="Síntomas / Fallo reportado *" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white" rows={2} value={formOrden.fallo_reportado} onChange={e => setFormOrden({ ...formOrden, fallo_reportado: e.target.value })} />
               <input type="number" placeholder="Presupuesto Estimado ($ COP) - Opcional" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white" value={formOrden.valor_estimado} onChange={e => setFormOrden({ ...formOrden, valor_estimado: e.target.value })} />
-            </div>
 
             <button
               onClick={async () => {
