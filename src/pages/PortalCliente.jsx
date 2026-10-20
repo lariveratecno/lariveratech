@@ -41,8 +41,8 @@ export default function PortalCliente() {
         
         <div className="space-y-2">
           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-white text-3xl mx-auto shadow-lg shadow-indigo-600/30">TF</div>
-          <h1 className="text-2xl font-bold text-white">TechFix Soluciones</h1>
-          <p className="text-sm text-slate-400">Consulta el estado de tu reparación</p>
+          <h1 className="text-2xl font-bold text-white">La Rivera Technologica</h1>
+          <p className="text-sm text-slate-400">Consulta el estado de tu Equipo</p>
         </div>
 
         <form onSubmit={consultarOrden} className="flex gap-2">
