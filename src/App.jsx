@@ -418,14 +418,14 @@ function MainApp() {
   const [formCompra, setFormCompra] = useState({ proveedor: '', descripcion_producto: '', costo: 0, precio_venta_sugerido: 0 });
   const [mostrarHistorialPortal, setMostrarHistorialPortal] = useState(false);
 
-  const [formNuevoRol, setFormNuevoRol] = useState({ nombre: '', permisos: { crear_orden: true, editar_diagnostico: true, ver_clientes: false, editar_clientes: false, facturar: false, ver_configuracion: false } });
+  const [formNuevoRol, setFormNuevoRol] = useState({ nombre: '', permisos: { crear_orden: true, editar_diagnostico: true, ver_clientes: true, editar_clientes: true, facturar: true, ver_configuracion: true } });
   const [formUsuarioNuevo, setFormUsuarioNuevo] = useState({ nombre: '', usuario: '', clave: '', rolId: roles[0]?.id || '' });
 
   const clientesFiltradosBusqueda = clientes.filter(c => c.nombre.toLowerCase().includes(busquedaCliente.toLowerCase()) || c.telefono.includes(busquedaCliente));
   const clientesFiltradosVenta = clientes.filter(c => c.nombre.toLowerCase().includes(busquedaClienteVenta.toLowerCase()) || c.telefono.includes(busquedaClienteVenta));
 
   const enviarWhatsApp = (orden, idConsecutivoStr) => {
-    const msg = `Hola *${orden.cliente_nombre}* 👋\n\nTe saludamos de *${empresa.nombre}*.\n\nTu orden *${idConsecutivoStr}* (*${orden.tipo_equipo} ${orden.marca_modelo}*) se encuentra en estado: *${orden.estado}*.\n\nPuedes consultar el avance, diagnóstico y estado de tu equipo ingresando a nuestra plataforma:\n🔗 https://lariveratech.vercel.app/portal\n\nUtiliza tu código único: *${orden.codigo_seguimiento}*`;
+    const msg = `Hola *${orden.cliente_nombre}* 👋\n\nTe saludamos de *${empresa.nombre}*.\n\nTu orden *${idConsecutivoStr}* (*${orden.tipo_equipo} ${orden.marca_modelo}*) se encuentra en estado: *${orden.estado}*.\n\nPuedes consultar el avance, diagnóstico y estado de tu equipo ingresando a nuestra plataforma:\n🔗 https://syspcdoctor.vercel.app/portal\n\nUtiliza tu código único: *${orden.codigo_seguimiento}*`;
     window.open(`https://wa.me/57${orden.cliente_telefono}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -498,9 +498,20 @@ function MainApp() {
     }
   };
 
-  const permisos = usuarioSesion?.id === 'emergencia' 
+  // Corrección de permisos: Si es admin de emergencia o rol administrador, tiene acceso total garantizado
+  const basePermisos = usuarioSesion?.id === 'emergencia' || (rolActual && rolActual.nombre?.toLowerCase().includes('admin'))
     ? { crear_orden: true, editar_diagnostico: true, ver_clientes: true, editar_clientes: true, facturar: true, ver_configuracion: true } 
     : (rolActual ? (typeof rolActual.permisos === 'string' ? JSON.parse(rolActual.permisos) : rolActual.permisos) : {});
+
+  const permisos = {
+    crear_orden: true,
+    editar_diagnostico: true,
+    ver_clientes: true,
+    editar_clientes: true,
+    facturar: true,
+    ver_configuracion: true,
+    ...basePermisos
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
@@ -738,21 +749,28 @@ function MainApp() {
         {tab === 'clientes' && permisos.ver_clientes && (
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
             <div className="flex justify-between items-center"><h2 className="text-xl font-bold text-white">Directorio de Clientes</h2><div className="space-x-2"><button onClick={exportarClientesCSV} className="bg-slate-800 text-slate-200 px-3 py-1.5 rounded-xl text-xs">📊 Exportar</button>{permisos.editar_clientes && <button onClick={() => { setModalEditCliente({}); setFormNuevoCliente({ nombre: '', telefono: '', cedula: '', email: '', direccion: '' }); }} className="bg-indigo-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold">+ Nuevo Cliente</button>}</div></div>
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-800 text-slate-400 uppercase"><tr><th className="p-3">Cliente</th><th className="p-3">Teléfono</th><th className="p-3 text-right">Acciones</th></tr></thead>
-              <tbody className="divide-y divide-slate-800">
-                {clientes.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-800/40">
-                    <td className="p-3 font-bold text-white">{c.nombre}</td>
-                    <td className="p-3 text-indigo-400">{c.telefono}</td>
-                    <td className="p-3 text-right space-x-1">
-                      {permisos.editar_clientes && <button onClick={() => { setModalEditCliente(c); setFormNuevoCliente({ nombre: c.nombre || '', telefono: c.telefono || '', cedula: c.cedula || '', email: c.email || '', direccion: c.direccion || '' }); }} className="bg-slate-800 text-white px-2 py-1 rounded text-[11px]">✏️ Editar</button>}
-                      <button onClick={() => setVerHistorialCliente(c)} className="bg-indigo-600 text-white px-2 py-1 rounded text-[11px]">📜 Historial</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {clientes.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 text-xs">
+                <p>No hay clientes registrados en esta empresa todavía.</p>
+                <p className="mt-1">Haz clic en <strong>+ Nuevo Cliente</strong> o crea una nueva orden para registrar el primero.</p>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800 text-slate-400 uppercase"><tr><th className="p-3">Cliente</th><th className="p-3">Teléfono</th><th className="p-3 text-right">Acciones</th></tr></thead>
+                <tbody className="divide-y divide-slate-800">
+                  {clientes.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-800/40">
+                      <td className="p-3 font-bold text-white">{c.nombre}</td>
+                      <td className="p-3 text-indigo-400">{c.telefono}</td>
+                      <td className="p-3 text-right space-x-1">
+                        {permisos.editar_clientes && <button onClick={() => { setModalEditCliente(c); setFormNuevoCliente({ nombre: c.nombre || '', telefono: c.telefono || '', cedula: c.cedula || '', email: c.email || '', direccion: c.direccion || '' }); }} className="bg-slate-800 text-white px-2 py-1 rounded text-[11px]">✏️ Editar</button>}
+                        <button onClick={() => setVerHistorialCliente(c)} className="bg-indigo-600 text-white px-2 py-1 rounded text-[11px]">📜 Historial</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -1046,7 +1064,7 @@ function MainApp() {
                   <label className="flex items-center gap-2"><input type="checkbox" checked={formNuevoRol.permisos.facturar} onChange={e => setFormNuevoRol({ ...formNuevoRol, permisos: { ...formNuevoRol.permisos, facturar: e.target.checked } })} /> Remisiones, Ventas y Compras</label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={formNuevoRol.permisos.ver_configuracion} onChange={e => setFormNuevoRol({ ...formNuevoRol, permisos: { ...formNuevoRol.permisos, ver_configuracion: e.target.checked } })} /> Configuración</label>
                 </div>
-                <button onClick={async () => { if (!formNuevoRol.nombre) return alert('Ingresa un nombre para el rol.'); await agregarRol(formNuevoRol.nombre, formNuevoRol.permisos); alert('Rol creado con éxito'); setFormNuevoRol({ nombre: '', permisos: { crear_orden: true, editar_diagnostico: true, ver_clientes: false, editar_clientes: false, facturar: false, ver_configuracion: false } }); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">Guardar Nuevo Rol</button>
+                <button onClick={async () => { if (!formNuevoRol.nombre) return alert('Ingresa un nombre para el rol.'); await agregarRol(formNuevoRol.nombre, formNuevoRol.permisos); alert('Rol creado con éxito'); setFormNuevoRol({ nombre: '', permisos: { crear_orden: true, editar_diagnostico: true, ver_clientes: true, editar_clientes: true, facturar: true, ver_configuracion: true } }); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">Guardar Nuevo Rol</button>
 
                 <p className="font-bold text-indigo-400 uppercase pt-4 border-t border-slate-700">Crear Usuario y Asignar Rol</p>
                 <div className="grid grid-cols-2 gap-2"><input placeholder="Nombre Completo" className="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white" value={formUsuarioNuevo.nombre} onChange={e => setFormUsuarioNuevo({ ...formUsuarioNuevo, nombre: e.target.value })} /><input placeholder="Usuario" className="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white" value={formUsuarioNuevo.usuario} onChange={e => setFormUsuarioNuevo({ ...formUsuarioNuevo, usuario: e.target.value })} /></div>
@@ -1659,8 +1677,7 @@ function PortalPublico() {
           <p className="font-bold text-slate-300">{empresa.nombre}</p>
           {empresa.direccion && <p>📍 Dirección: {empresa.direccion}</p>}
           {empresa.telefono && <p>📞 Teléfono: {empresa.telefono}</p>}
-          {empresa.email && <p>✉️ Correo: {empresa.email}</p>}
-        </div>
+          {empresa.email && <p>✉️ Correo: {empresa.email}</p>}        </div>
       </div>
     </div>
   );
